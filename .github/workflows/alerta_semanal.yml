@@ -2,7 +2,7 @@ name: DVT - Alerta Semanal de Tramites
 
 on:
   schedule:
-    - cron: '0 13 * * 1'
+    - cron: '0 11 * * 1'
   workflow_dispatch:
 
 jobs:
