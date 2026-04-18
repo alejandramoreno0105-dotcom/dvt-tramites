@@ -3,6 +3,7 @@ import json
 import smtplib
 import urllib.request
 import urllib.parse
+import base64
 import io
 import os
 import sys
