@@ -227,7 +227,8 @@ print("index.html generado.")
 
 # ── WhatsApp ─────────────────────────────────────────────────────────────────
 def enviar_whatsapp():
-    print("Enviando WhatsApp...")
+    print("Enviando WhatsApp via Twilio...")
+    import base64
     lineas_env = "\n".join(
         "- " + str(r["Expediente"]) + " -> " + str(r["Destino"])[:35] + " (" + fmt_fecha(r["Fecha y hora Pase"]) + ")"
         for _, r in enviados_recientes.head(4).iterrows()
@@ -238,14 +239,27 @@ def enviar_whatsapp():
     )
     msg  = "DVT Reporte Semanal " + HOY.strftime("%d/%m/%Y") + "\n\n"
     if lineas_env:
-        msg += "ENVIADOS EN TERMINO (" + str(len(enviados_recientes)) + "):\n" + lineas_env + "\n\n"
+        msg += "ENVIADOS DESDE DVT FBIOyF (" + str(len(enviados_recientes)) + "):\n" + lineas_env + "\n\n"
     if lineas_dvt:
-        msg += "INGRESADOS A DVT ESTE MES (" + str(len(en_dvt)) + "):\n" + lineas_dvt + "\n\n"
+        msg += "INGRESADOS A DVT FBIOyF (" + str(len(en_dvt)) + "):\n" + lineas_dvt + "\n\n"
     msg += "Ver reporte: " + LINK
-    params = urllib.parse.urlencode({"phone": CALLMEBOT_PHONE, "text": msg, "apikey": CALLMEBOT_APIKEY})
-    req = urllib.request.Request("https://api.callmebot.com/whatsapp.php?" + params, headers={"User-Agent": "dvt"})
-    with urllib.request.urlopen(req) as r:
-        print("WhatsApp OK (" + str(r.status) + ")")
+
+    url = "https://api.twilio.com/2010-04-01/Accounts/" + TWILIO_SID + "/Messages.json"
+    credentials = base64.b64encode((TWILIO_SID + ":" + TWILIO_TOKEN).encode()).decode()
+    headers = {
+        "Authorization": "Basic " + credentials,
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    for numero in TWILIO_NUMEROS:
+        numero = numero.strip()
+        data = urllib.parse.urlencode({
+            "From": TWILIO_FROM,
+            "To": "whatsapp:+" + numero,
+            "Body": msg
+        }).encode()
+        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as r:
+            print("WhatsApp enviado a " + numero + " (" + str(r.status) + ")")
 
 # ── Email ─────────────────────────────────────────────────────────────────────
 def enviar_email():
