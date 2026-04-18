@@ -13,8 +13,10 @@ from datetime import datetime
 GMAIL_REMITENTE     = os.environ["GMAIL_REMITENTE"]
 GMAIL_PASSWORD      = os.environ["GMAIL_PASSWORD"]
 GMAIL_DESTINATARIOS = os.environ["GMAIL_DESTINATARIOS"].split(",")
-CALLMEBOT_APIKEY    = os.environ["CALLMEBOT_APIKEY"]
-CALLMEBOT_PHONE     = os.environ["CALLMEBOT_PHONE"]
+TWILIO_SID      = os.environ["TWILIO_ACCOUNT_SID"]
+TWILIO_TOKEN    = os.environ["TWILIO_AUTH_TOKEN"]
+TWILIO_NUMEROS  = os.environ["TWILIO_NUMEROS"].split(",")
+TWILIO_FROM     = "whatsapp:+14155238886"
 GDRIVE_FILE_ID      = os.environ["GDRIVE_FILE_ID"]
 GDRIVE_CREDENTIALS  = json.loads(os.environ["GDRIVE_CREDENTIALS"])
 GITHUB_REPO         = os.environ.get("GITHUB_REPOSITORY", "usuario/dvt-tramites")
