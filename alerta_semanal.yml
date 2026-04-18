@@ -1,0 +1,41 @@
+name: DVT - Alerta Semanal de Tramites
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'   # Lunes 10:00 AM Argentina (UTC-3 = 13:00 UTC)
+  workflow_dispatch:         # Ejecutar manualmente cuando quieras probar
+
+jobs:
+  generar-alerta:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install pandas openpyxl google-auth google-api-python-client
+
+      - name: Ejecutar script de alertas
+        env:
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+          GDRIVE_FILE_ID:     ${{ secrets.GDRIVE_FILE_ID }}
+          GMAIL_REMITENTE:    ${{ secrets.GMAIL_REMITENTE }}
+          GMAIL_PASSWORD:     ${{ secrets.GMAIL_PASSWORD }}
+          GMAIL_DESTINATARIOS:${{ secrets.GMAIL_DESTINATARIOS }}
+          CALLMEBOT_APIKEY:   ${{ secrets.CALLMEBOT_APIKEY }}
+          CALLMEBOT_PHONE:    ${{ secrets.CALLMEBOT_PHONE }}
+        run: python actualizar_tramites.py
+
+      - name: Publicar dashboard actualizado
+        run: |
+          git config user.name "DVT Bot"
+          git config user.email "dvt-bot@noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Reporte semanal $(date +'%d/%m/%Y')"
+          git push
