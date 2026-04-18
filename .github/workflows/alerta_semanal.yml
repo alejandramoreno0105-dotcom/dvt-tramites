@@ -27,7 +27,7 @@ jobs:
           GDRIVE_FILE_ID:     ${{ secrets.GDRIVE_FILE_ID }}
           GMAIL_REMITENTE:    ${{ secrets.GMAIL_REMITENTE }}
           GMAIL_PASSWORD:     ${{ secrets.GMAIL_PASSWORD }}
-          GMAIL_DESTINATARIOS:${{ secrets.GMAIL_DESTINATARIOS }}
+          GMAIL_DESTINATARIOS: ${{ secrets.GMAIL_DESTINATARIOS }}
           CALLMEBOT_APIKEY:   ${{ secrets.CALLMEBOT_APIKEY }}
           CALLMEBOT_PHONE:    ${{ secrets.CALLMEBOT_PHONE }}
         run: python actualizar_tramites.py
