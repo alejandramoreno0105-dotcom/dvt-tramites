@@ -14,10 +14,10 @@ from datetime import datetime
 GMAIL_REMITENTE     = os.environ["GMAIL_REMITENTE"]
 GMAIL_PASSWORD      = os.environ["GMAIL_PASSWORD"]
 GMAIL_DESTINATARIOS = os.environ["GMAIL_DESTINATARIOS"].split(",")
-TWILIO_SID      = os.environ["TWILIO_ACCOUNT_SID"]
-TWILIO_TOKEN    = os.environ["TWILIO_AUTH_TOKEN"]
-TWILIO_NUMEROS  = os.environ["TWILIO_NUMEROS"].split(",")
-TWILIO_FROM     = "whatsapp:+14155238886"
+TWILIO_SID          = os.environ["TWILIO_ACCOUNT_SID"]
+TWILIO_TOKEN        = os.environ["TWILIO_AUTH_TOKEN"]
+TWILIO_NUMEROS      = os.environ["TWILIO_NUMEROS"].split(",")
+TWILIO_FROM         = "whatsapp:+14155238886"
 GDRIVE_FILE_ID      = os.environ["GDRIVE_FILE_ID"]
 GDRIVE_CREDENTIALS  = json.loads(os.environ["GDRIVE_CREDENTIALS"])
 GITHUB_REPO         = os.environ.get("GITHUB_REPOSITORY", "usuario/dvt-tramites")
@@ -29,7 +29,6 @@ LIMITE = 5
 HOY    = datetime.today()
 LINK   = "https://" + GITHUB_USUARIO + ".github.io/" + GITHUB_REPO_NOMBRE + "/"
 
-# ── Descargar Excel ──────────────────────────────────────────────────────────
 print("Descargando Excel desde Google Drive...")
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -59,7 +58,6 @@ while not done:
 fh.seek(0)
 print("Excel descargado.")
 
-# ── Procesar datos ───────────────────────────────────────────────────────────
 df = pd.read_excel(fh)
 df = df.drop_duplicates()
 df["Fecha y hora Pase"] = pd.to_datetime(df["Fecha y hora Pase"], errors="coerce")
@@ -68,22 +66,19 @@ if "Título" in df.columns:
 
 df["dias"] = (HOY - df["Fecha y hora Pase"]).dt.days
 
-# Sección 1: Enviados con menos de 5 días (en término, salidos desde DVT)
 enviados_recientes = df[
     (df["Origen"] == DVT) &
     (df["Estado"].str.lower().str.strip() == "enviado") &
     (df["dias"] <= LIMITE)
 ].sort_values("Fecha y hora Pase", ascending=False).copy()
 
-# Sección 2: Trámites que están en DVT como destino, con máximo 30 días ahí
 en_dvt = df[
     (df["Destino"] == DVT) &
     (df["dias"] <= 30)
 ].sort_values("dias", ascending=True).copy()
 
-print("Enviados desde DVT FBIOyF: " + str(len(enviados_recientes)) + " | En DVT (hasta 30 dias): " + str(len(en_dvt)))
+print("Enviados: " + str(len(enviados_recientes)) + " | En DVT: " + str(len(en_dvt)))
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
 def fmt_fecha(val):
     if pd.notna(val):
         return val.strftime("%d/%m/%Y %H:%M")
@@ -96,14 +91,13 @@ def card_enviado(row):
     titulo = str(row.get("Titulo", ""))
     exp    = str(row["Expediente"])
     dest   = str(row["Destino"])
-
+    estado = str(row.get("Estado", "")) if not pd.isna(row.get("Estado")) else "sin estado"
     html  = '<div style="background:#fff;border:0.5px solid #ddd;border-left:4px solid #27AE60;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:10px;">'
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
     html += '<span style="font-size:12px;color:#888;font-weight:600;">' + exp + '</span>'
     html += '<span style="background:#D5F5E3;color:#1E8449;font-size:11px;padding:2px 8px;border-radius:20px;">' + str(d) + ' dias</span>'
     html += '</div>'
     html += '<div style="font-size:14px;color:#1a1a1a;font-weight:500;margin-bottom:8px;line-height:1.4;">' + titulo + '</div>'
-    estado = str(row.get("Estado", "")) if not pd.isna(row.get("Estado")) else "sin estado"
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">'
     html += '<span style="background:#D6EAF8;color:#1A5276;font-size:11px;padding:2px 8px;border-radius:20px;">' + tipo + '</span>'
     html += '<span style="background:#FFF3CD;color:#856404;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;">' + estado + '</span>'
@@ -112,8 +106,7 @@ def card_enviado(row):
     html += '<div style="background:#EAF4FB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">'
     html += '<span style="font-size:11px;color:#888;">Enviado a</span>'
     html += '<span style="font-size:13px;color:#1A5276;font-weight:600;">' + dest + '</span>'
-    html += '</div>'
-    html += '</div>'
+    html += '</div></div>'
     return html
 
 def card_en_dvt(row):
@@ -124,7 +117,6 @@ def card_en_dvt(row):
     exp    = str(row["Expediente"])
     origen = str(row["Origen"])
     estado = str(row.get("Estado", "")) if not pd.isna(row.get("Estado")) else "sin estado"
-
     if d <= 7:
         color_dias = "#1E8449"
         bg_dias    = "#D5F5E3"
@@ -134,7 +126,6 @@ def card_en_dvt(row):
     else:
         color_dias = "#C0392B"
         bg_dias    = "#FADBD8"
-
     html  = '<div style="background:#fff;border:0.5px solid #ddd;border-left:4px solid #1A5276;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:10px;">'
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
     html += '<span style="font-size:12px;color:#888;font-weight:600;">' + exp + '</span>'
@@ -149,17 +140,14 @@ def card_en_dvt(row):
     html += '<div style="background:#EBF5FB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">'
     html += '<span style="font-size:11px;color:#888;">Vino desde</span>'
     html += '<span style="font-size:13px;color:#1A5276;font-weight:600;">' + origen + '</span>'
-    html += '</div>'
-    html += '</div>'
+    html += '</div></div>'
     return html
 
 cards_enviados = "".join(card_enviado(r) for _, r in enviados_recientes.iterrows())
 cards_en_dvt   = "".join(card_en_dvt(r)  for _, r in en_dvt.iterrows())
+sin_env = '<p style="font-size:13px;color:#aaa;padding:8px 0;">No hay tramites enviados esta semana.</p>'
+sin_dvt = '<p style="font-size:13px;color:#aaa;padding:8px 0;">No hay tramites nuevos en DVT este mes.</p>'
 
-sin_env  = '<p style="font-size:13px;color:#aaa;padding:8px 0;">No hay tramites enviados en termino esta semana.</p>'
-sin_dvt  = '<p style="font-size:13px;color:#aaa;padding:8px 0;">No hay tramites nuevos en DVT este mes.</p>'
-
-# ── HTML ─────────────────────────────────────────────────────────────────────
 html = """<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -169,11 +157,10 @@ html = """<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F4F6F7;color:#1a1a1a}
-.header{background:#1A5276;color:white;padding:18px 24px}
+.header{background:#0097b2;color:white;padding:18px 24px}
 .header h1{font-size:17px;font-weight:600}
 .header p{font-size:12px;opacity:.7;margin-top:4px}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px;max-width:720px;margin:0 auto}
-@media(min-width:500px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:#fff;border-radius:10px;border:0.5px solid #e0e0e0;padding:12px;text-align:center}
 .stat-num{font-size:24px;font-weight:600}
 .stat-label{font-size:11px;color:#888;margin-top:3px}
@@ -187,37 +174,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 <div class="header">
-  <h1>Direccion de Vinculacion Tecnologica - Reporte de Tramites en SUDOCU</h1>
+  <h1>Direccion de Vinculacion Tecnologica - Reporte de Tramites</h1>
   <p>""" + HOY.strftime("%d/%m/%Y %H:%M") + """</p>
 </div>
-
 <div class="stats" style="padding-top:16px;">
-  <div class="stat">
-    <div class="stat-num ok">""" + str(len(enviados_recientes)) + """</div>
-    <div class="stat-label">Enviados desde DVT FBIOyF (hasta """ + str(LIMITE) + """ dias)</div>
-  </div>
-  <div class="stat">
-    <div class="stat-num azul">""" + str(len(en_dvt)) + """</div>
-    <div class="stat-label">Ingresados a DVT FBIOyF</div>
-  </div>
+  <div class="stat"><div class="stat-num ok">""" + str(len(enviados_recientes)) + """</div><div class="stat-label">Enviados desde DVT FBIOyF</div></div>
+  <div class="stat"><div class="stat-num azul">""" + str(len(en_dvt)) + """</div><div class="stat-label">Ingresados a DVT FBIOyF</div></div>
 </div>
-
 <div class="section">
-  <div class="section-title">
-    Enviados desde DVT FBIOyF
-    <span class="badge-ok">""" + str(len(enviados_recientes)) + """ tramites</span>
-  </div>
+  <div class="section-title">Enviados desde DVT FBIOyF <span class="badge-ok">""" + str(len(enviados_recientes)) + """ tramites</span></div>
   """ + (cards_enviados if cards_enviados else sin_env) + """
 </div>
-
 <div class="section">
-  <div class="section-title">
-    Ingresados a DVT FBIOyF
-    <span class="badge-azul">""" + str(len(en_dvt)) + """ tramites</span>
-  </div>
+  <div class="section-title">Ingresados a DVT FBIOyF <span class="badge-azul">""" + str(len(en_dvt)) + """ tramites</span></div>
   """ + (cards_en_dvt if cards_en_dvt else sin_dvt) + """
 </div>
-
 <div class="footer">FBIOyF - UNR · Reporte automatico semanal · Lunes 10:00 AM</div>
 </body>
 </html>"""
@@ -226,7 +197,6 @@ with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 print("index.html generado.")
 
-# ── WhatsApp ─────────────────────────────────────────────────────────────────
 def enviar_whatsapp():
     print("Enviando WhatsApp via Twilio...")
     lineas_env = "\n".join(
@@ -253,14 +223,13 @@ def enviar_whatsapp():
         numero = numero.strip()
         data = urllib.parse.urlencode({
             "From": TWILIO_FROM,
-            "To": "whatsapp:+54" + numero,
+            "To": "whatsapp:+" + numero,
             "Body": msg
         }).encode()
         req = urllib.request.Request(url, data=data, headers=headers, method="POST")
         with urllib.request.urlopen(req) as r:
             print("WhatsApp enviado a " + numero + " (" + str(r.status) + ")")
 
-# ── Email ─────────────────────────────────────────────────────────────────────
 def enviar_email():
     print("Enviando correo...")
     ths = "background:#0097b2;color:white;padding:9px 10px;text-align:left;font-size:12px;"
@@ -287,7 +256,7 @@ def enviar_email():
         ths_html = "".join('<th style="' + ths + '">' + c + "</th>" for c in cols)
         trs = ""
         for _, r in rows.iterrows():
-            d = int(r["dias"])
+            d   = int(r["dias"])
             bg  = "#D5F5E3" if d <= 7 else ("#FEF9E7" if d <= 15 else "#FADBD8")
             col = "#1E8449" if d <= 7 else ("#E67E22" if d <= 15 else "#C0392B")
             est = str(r.get("Estado","")) if not pd.isna(r.get("Estado")) else "sin estado"
@@ -305,7 +274,6 @@ def enviar_email():
     if len(enviados_recientes) > 0:
         bloque_env  = '<h3 style="font-size:13px;margin:0 0 10px;color:#1E8449;">Enviados desde DVT FBIOyF (' + str(len(enviados_recientes)) + ')</h3>'
         bloque_env += hacer_tabla_env(enviados_recientes)
-
     bloque_dvt = ""
     if len(en_dvt) > 0:
         bloque_dvt  = '<h3 style="font-size:13px;margin:20px 0 10px;color:#1A5276;">Ingresados a DVT FBIOyF (' + str(len(en_dvt)) + ')</h3>'
@@ -313,7 +281,7 @@ def enviar_email():
 
     cuerpo  = '<div style="font-family:Arial,sans-serif;max-width:760px;margin:0 auto;">'
     cuerpo += '<div style="background:#0097b2;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">'
-    cuerpo += '<h2 style="margin:0;font-size:16px;">DVT - Reporte Semanal de Tramites en SUDOCU</h2>'
+    cuerpo += '<h2 style="margin:0;font-size:16px;">DVT - Reporte Semanal de Tramites</h2>'
     cuerpo += '<p style="margin:5px 0 0;font-size:12px;opacity:.8;">' + HOY.strftime("%d/%m/%Y") + '</p>'
     cuerpo += "</div>"
     cuerpo += '<div style="padding:16px 20px;background:#fff;border:1px solid #ddd;border-top:none;">'
@@ -334,7 +302,6 @@ def enviar_email():
         srv.sendmail(GMAIL_REMITENTE, GMAIL_DESTINATARIOS, msg.as_string())
     print("Correo enviado a: " + ", ".join(GMAIL_DESTINATARIOS))
 
-# ── Main ─────────────────────────────────────────────────────────────────────
 try:
     enviar_whatsapp()
     enviar_email()
