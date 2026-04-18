@@ -263,7 +263,7 @@ def enviar_whatsapp():
 # ── Email ─────────────────────────────────────────────────────────────────────
 def enviar_email():
     print("Enviando correo...")
-    ths = "background:#1A5276;color:white;padding:9px 10px;text-align:left;font-size:12px;"
+    ths = "background:#0097b2;color:white;padding:9px 10px;text-align:left;font-size:12px;"
     tds = "padding:8px 10px;border-bottom:1px solid #eee;font-size:12px;vertical-align:top;"
 
     def hacer_tabla_env(rows):
@@ -312,7 +312,7 @@ def enviar_email():
         bloque_dvt += hacer_tabla_dvt(en_dvt)
 
     cuerpo  = '<div style="font-family:Arial,sans-serif;max-width:760px;margin:0 auto;">'
-    cuerpo += '<div style="background:#1A5276;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">'
+    cuerpo += '<div style="background:#0097b2;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">'
     cuerpo += '<h2 style="margin:0;font-size:16px;">DVT - Reporte Semanal de Tramites en SUDOCU</h2>'
     cuerpo += '<p style="margin:5px 0 0;font-size:12px;opacity:.8;">' + HOY.strftime("%d/%m/%Y") + '</p>'
     cuerpo += "</div>"
