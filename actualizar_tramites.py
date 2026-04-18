@@ -253,7 +253,7 @@ def enviar_whatsapp():
         numero = numero.strip()
         data = urllib.parse.urlencode({
             "From": TWILIO_FROM,
-            "To": "whatsapp:+54" numero,
+            "To": "whatsapp:+54" + numero,
             "Body": msg
         }).encode()
         req = urllib.request.Request(url, data=data, headers=headers, method="POST")
