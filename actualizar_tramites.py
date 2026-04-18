@@ -187,7 +187,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 <div class="header">
-  <h1>Direccion de Vinculacion Tecnologica - Reporte de Tramites</h1>
+  <h1>Direccion de Vinculacion Tecnologica - Reporte de Tramites en SUDOCU</h1>
   <p>""" + HOY.strftime("%d/%m/%Y %H:%M") + """</p>
 </div>
 
@@ -313,7 +313,7 @@ def enviar_email():
 
     cuerpo  = '<div style="font-family:Arial,sans-serif;max-width:760px;margin:0 auto;">'
     cuerpo += '<div style="background:#1A5276;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">'
-    cuerpo += '<h2 style="margin:0;font-size:16px;">DVT - Reporte Semanal de Tramites</h2>'
+    cuerpo += '<h2 style="margin:0;font-size:16px;">DVT - Reporte Semanal de Tramites en SUDOCU</h2>'
     cuerpo += '<p style="margin:5px 0 0;font-size:12px;opacity:.8;">' + HOY.strftime("%d/%m/%Y") + '</p>'
     cuerpo += "</div>"
     cuerpo += '<div style="padding:16px 20px;background:#fff;border:1px solid #ddd;border-top:none;">'
