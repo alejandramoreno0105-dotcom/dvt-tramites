@@ -78,7 +78,7 @@ en_dvt = df[
     (df["dias"] <= 30)
 ].sort_values("dias", ascending=True).copy()
 
-print("Enviados en termino: " + str(len(enviados_recientes)) + " | En DVT (hasta 30 dias): " + str(len(en_dvt)))
+print("Enviados desde DVT FBIOyF: " + str(len(enviados_recientes)) + " | En DVT (hasta 30 dias): " + str(len(en_dvt)))
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def fmt_fecha(val):
@@ -100,8 +100,10 @@ def card_enviado(row):
     html += '<span style="background:#D5F5E3;color:#1E8449;font-size:11px;padding:2px 8px;border-radius:20px;">' + str(d) + ' dias</span>'
     html += '</div>'
     html += '<div style="font-size:14px;color:#1a1a1a;font-weight:500;margin-bottom:8px;line-height:1.4;">' + titulo + '</div>'
+    estado = str(row.get("Estado", "")) if not pd.isna(row.get("Estado")) else "sin estado"
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">'
     html += '<span style="background:#D6EAF8;color:#1A5276;font-size:11px;padding:2px 8px;border-radius:20px;">' + tipo + '</span>'
+    html += '<span style="background:#FFF3CD;color:#856404;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;">' + estado + '</span>'
     html += '<span style="background:#F4F6F7;color:#555;font-size:11px;padding:2px 8px;border-radius:20px;">Pase: ' + fecha + '</span>'
     html += '</div>'
     html += '<div style="background:#EAF4FB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">'
@@ -189,17 +191,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="stats" style="padding-top:16px;">
   <div class="stat">
     <div class="stat-num ok">""" + str(len(enviados_recientes)) + """</div>
-    <div class="stat-label">Enviados en termino (hasta """ + str(LIMITE) + """ dias)</div>
+    <div class="stat-label">Enviados desde DVT FBIOyF (hasta """ + str(LIMITE) + """ dias)</div>
   </div>
   <div class="stat">
     <div class="stat-num azul">""" + str(len(en_dvt)) + """</div>
-    <div class="stat-label">Ingresados a DVT (ultimo mes)</div>
+    <div class="stat-label">Ingresados a DVT FBIOyF</div>
   </div>
 </div>
 
 <div class="section">
   <div class="section-title">
-    Enviados en termino
+    Enviados desde DVT FBIOyF
     <span class="badge-ok">""" + str(len(enviados_recientes)) + """ tramites</span>
   </div>
   """ + (cards_enviados if cards_enviados else sin_env) + """
@@ -207,7 +209,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="section">
   <div class="section-title">
-    Ingresados a DVT en el ultimo mes
+    Ingresados a DVT FBIOyF
     <span class="badge-azul">""" + str(len(en_dvt)) + """ tramites</span>
   </div>
   """ + (cards_en_dvt if cards_en_dvt else sin_dvt) + """
@@ -250,13 +252,15 @@ def enviar_email():
     tds = "padding:8px 10px;border-bottom:1px solid #eee;font-size:12px;vertical-align:top;"
 
     def hacer_tabla_env(rows):
-        cols = ["Expediente", "Titulo", "Fecha y hora Pase", "Enviado a", "Dias"]
+        cols = ["Expediente", "Titulo", "Estado", "Fecha y hora Pase", "Enviado a", "Dias"]
         ths_html = "".join('<th style="' + ths + '">' + c + "</th>" for c in cols)
         trs = ""
         for _, r in rows.iterrows():
+            est = str(r.get("Estado","")) if not pd.isna(r.get("Estado")) else "sin estado"
             trs += '<tr style="background:#F0FAF4;">'
             trs += '<td style="' + tds + 'font-weight:600;">' + str(r["Expediente"]) + "</td>"
             trs += '<td style="' + tds + '">' + str(r.get("Titulo",""))[:55] + "</td>"
+            trs += '<td style="' + tds + 'font-weight:600;color:#856404;">' + est + "</td>"
             trs += '<td style="' + tds + '">' + fmt_fecha(r["Fecha y hora Pase"]) + "</td>"
             trs += '<td style="' + tds + 'color:#1A5276;font-weight:600;">' + str(r["Destino"]) + "</td>"
             trs += '<td style="' + tds + 'color:#1E8449;font-weight:700;">' + str(int(r["dias"])) + "d</td>"
@@ -264,30 +268,32 @@ def enviar_email():
         return '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;"><tr>' + ths_html + "</tr>" + trs + "</table>"
 
     def hacer_tabla_dvt(rows):
-        cols = ["Expediente", "Titulo", "Fecha y hora Pase", "Vino desde", "Dias en DVT"]
+        cols = ["Expediente", "Titulo", "Estado", "Fecha y hora Pase", "Vino desde", "Dias en DVT"]
         ths_html = "".join('<th style="' + ths + '">' + c + "</th>" for c in cols)
         trs = ""
         for _, r in rows.iterrows():
             d = int(r["dias"])
-            bg = "#D5F5E3" if d <= 7 else ("#FEF9E7" if d <= 15 else "#FADBD8")
-            c  = "#1E8449" if d <= 7 else ("#E67E22" if d <= 15 else "#C0392B")
+            bg  = "#D5F5E3" if d <= 7 else ("#FEF9E7" if d <= 15 else "#FADBD8")
+            col = "#1E8449" if d <= 7 else ("#E67E22" if d <= 15 else "#C0392B")
+            est = str(r.get("Estado","")) if not pd.isna(r.get("Estado")) else "sin estado"
             trs += '<tr style="background:#fff;">'
             trs += '<td style="' + tds + 'font-weight:600;">' + str(r["Expediente"]) + "</td>"
             trs += '<td style="' + tds + '">' + str(r.get("Titulo",""))[:55] + "</td>"
+            trs += '<td style="' + tds + 'font-weight:600;color:#155724;">' + est + "</td>"
             trs += '<td style="' + tds + '">' + fmt_fecha(r["Fecha y hora Pase"]) + "</td>"
             trs += '<td style="' + tds + 'color:#1A5276;font-weight:600;">' + str(r["Origen"]) + "</td>"
-            trs += '<td style="' + tds + 'font-weight:700;"><span style="background:' + bg + ';color:' + c + ';padding:2px 7px;border-radius:20px;">' + str(d) + "d</span></td>"
+            trs += '<td style="' + tds + 'font-weight:700;"><span style="background:' + bg + ';color:' + col + ';padding:2px 7px;border-radius:20px;">' + str(d) + "d</span></td>"
             trs += "</tr>"
         return '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;"><tr>' + ths_html + "</tr>" + trs + "</table>"
 
     bloque_env = ""
     if len(enviados_recientes) > 0:
-        bloque_env  = '<h3 style="font-size:13px;margin:0 0 10px;color:#1E8449;">Enviados en termino (' + str(len(enviados_recientes)) + ')</h3>'
+        bloque_env  = '<h3 style="font-size:13px;margin:0 0 10px;color:#1E8449;">Enviados desde DVT FBIOyF (' + str(len(enviados_recientes)) + ')</h3>'
         bloque_env += hacer_tabla_env(enviados_recientes)
 
     bloque_dvt = ""
     if len(en_dvt) > 0:
-        bloque_dvt  = '<h3 style="font-size:13px;margin:20px 0 10px;color:#1A5276;">Ingresados a DVT en el ultimo mes (' + str(len(en_dvt)) + ')</h3>'
+        bloque_dvt  = '<h3 style="font-size:13px;margin:20px 0 10px;color:#1A5276;">Ingresados a DVT FBIOyF (' + str(len(en_dvt)) + ')</h3>'
         bloque_dvt += hacer_tabla_dvt(en_dvt)
 
     cuerpo  = '<div style="font-family:Arial,sans-serif;max-width:760px;margin:0 auto;">'
